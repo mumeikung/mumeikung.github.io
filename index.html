@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUMEIKUNG TOOLS</title>
+</head>
+<body>
+  <div>
+    <h1>Random Tools</h1>
+    <p style="margin: 0;">
+      <input type="checkbox" id="checkBox_AUp" value="A" checked>
+      <label for="A_CB">A-Z</label>
+    </p>
+    <p style="margin: 0;">
+      <input type="checkbox" id="checkBox_ALo" value="a" checked>
+      <label for="a_CB">a-z</label>
+    </p>
+    <p style="margin: 0;">
+      <input type="checkbox" id="checkBox_Num" value="0" checked>
+      <label for="0_CB">0-9</label>
+    </p>
+    <p>
+      <label for="pass_length">Length</label>
+      <input type="number" id="pass_length" value="8" min="0">
+    </p>
+    <p>
+      <button id="randBtn">Random</button>
+    </p>
+    <p>
+      <label for="pass_length">Output:</label>
+      <h5 id="pass_output"></h5>
+    </p>
+  </div>
+  <script>
+    const randBtn = document.getElementById('randBtn')
+    randBtn.onclick = () => {
+      const checkBox_AUp = document.getElementById('checkBox_AUp')
+      const checkBox_ALo = document.getElementById('checkBox_ALo')
+      const checkBox_Num = document.getElementById('checkBox_Num')
+
+      let randSet = ''
+      if (checkBox_AUp.checked) randSet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      if (checkBox_ALo.checked) randSet += 'abcdefghijklmnopqrstuvwxyz'
+      if (checkBox_Num.checked) randSet += '0123456789'
+
+      const pass_length = document.getElementById('pass_length')
+      const length = parseInt(pass_length.value) || 0
+
+      if (randSet.length > 0 && length > 0) {
+        let output = ''
+        for (let i = 0; i < length; i++) output += randSet.charAt(Math.floor(Math.random() * randSet.length))
+        document.getElementById('pass_output').innerHTML = output
+      }
+    }
+  </script>
+</body>
+</html>
