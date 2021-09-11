@@ -4,54 +4,85 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MUMEIKUNG TOOLS</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro">
+  <style>
+    body {
+      font-family: "Source Code Pro", monospace;
+    }
+  </style>
 </head>
 <body>
   <div>
-    <h1>Random Tools</h1>
+    <h1>Random String Tools</h1>
     <p style="margin: 0;">
       <input type="checkbox" id="checkBox_AUp" value="A" checked>
-      <label for="A_CB">A-Z</label>
+      <label for="checkBox_AUp">A-Z</label>
     </p>
     <p style="margin: 0;">
       <input type="checkbox" id="checkBox_ALo" value="a" checked>
-      <label for="a_CB">a-z</label>
+      <label for="checkBox_ALo">a-z</label>
     </p>
     <p style="margin: 0;">
       <input type="checkbox" id="checkBox_Num" value="0" checked>
-      <label for="0_CB">0-9</label>
+      <label for="checkBox_Num">0-9</label>
+    </p>
+    <p style="margin: 0;">
+      <input type="checkbox" id="checkBox_SP" value="0" checked>
+      <label for="checkBox_SP">_-@!#%&*=+?</label>
     </p>
     <p>
       <label for="pass_length">Length</label>
       <input type="number" id="pass_length" value="32" min="1">
     </p>
     <p>
+      <label for="pass_amount">Amount</label>
+      <input type="number" id="pass_amount" value="5" min="1">
+    </p>
+    <p>
       <button id="randBtn">Random</button>
     </p>
     <p>
       <label for="pass_length">Output:</label>
-      <h5 id="pass_output"></h5>
+      <div id="pass_output"></div>
     </p>
   </div>
   <script>
+    const randString = (stringSet = '', length = 0) => {
+      if (typeof stringSet !== 'string') return ''
+      if (stringSet.length <= 0) return ''
+      if (length <= 0) return ''
+      let output = ''
+
+      let randArray = new Uint8Array(length)
+      window.crypto.getRandomValues(randArray)
+      for (let i = 0; i < randArray.length; i++) output += stringSet.charAt(randArray[i] % stringSet.length)
+
+      return output
+    }
+
     const randBtn = document.getElementById('randBtn')
     randBtn.onclick = () => {
       const checkBox_AUp = document.getElementById('checkBox_AUp')
       const checkBox_ALo = document.getElementById('checkBox_ALo')
       const checkBox_Num = document.getElementById('checkBox_Num')
+      const checkBox_SP = document.getElementById('checkBox_SP')
 
       let randSet = ''
       if (checkBox_AUp.checked) randSet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       if (checkBox_ALo.checked) randSet += 'abcdefghijklmnopqrstuvwxyz'
       if (checkBox_Num.checked) randSet += '0123456789'
+      if (checkBox_SP.checked) randSet += '_-@!#%&*=+?'
 
       const pass_length = document.getElementById('pass_length')
       const length = parseInt(pass_length.value) || 0
+      const pass_amount = document.getElementById('pass_amount')
+      const amount = parseInt(pass_amount.value) || 0
 
-      if (randSet.length > 0 && length > 0) {
-        let output = ''
-        for (let i = 0; i < length; i++) output += randSet.charAt(Math.floor(Math.random() * randSet.length))
-        document.getElementById('pass_output').innerHTML = output
+      let output = ''
+      for (let i = 0; i < amount; i++) {
+        output += `<h5>${randString(randSet, length)}</h5>`
       }
+      document.getElementById('pass_output').innerHTML = output
     }
   </script>
 </body>
