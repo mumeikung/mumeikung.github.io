@@ -28,7 +28,11 @@
     </p>
     <p style="margin: 0;">
       <input type="checkbox" id="checkBox_SP" value="0" checked>
-      <label for="checkBox_SP">_-@!#%&*=+?</label>
+      <label for="checkBox_SP">-._@!#%&*=+?</label>
+    </p>
+    <p style="margin: 0;">
+      <input type="checkbox" id="checkBox_SP_safe" value="0">
+      <label for="checkBox_SP_safe">-._!*</label>
     </p>
     <p>
       <label for="pass_length">Length</label>
@@ -66,12 +70,14 @@
       const checkBox_ALo = document.getElementById('checkBox_ALo')
       const checkBox_Num = document.getElementById('checkBox_Num')
       const checkBox_SP = document.getElementById('checkBox_SP')
+      const checkBox_SP_safe = document.getElementById('checkBox_SP_safe')
 
       let randSet = ''
       if (checkBox_AUp.checked) randSet += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
       if (checkBox_ALo.checked) randSet += 'abcdefghijklmnopqrstuvwxyz'
       if (checkBox_Num.checked) randSet += '0123456789'
-      if (checkBox_SP.checked) randSet += '_-@!#%&*=+?'
+      if (checkBox_SP.checked) randSet += '-._@!#%&*=+?'
+      if (!checkBox_SP.checked && checkBox_SP_safe.checked) randSet += '-._!*'
 
       const pass_length = document.getElementById('pass_length')
       const length = parseInt(pass_length.value) || 0
