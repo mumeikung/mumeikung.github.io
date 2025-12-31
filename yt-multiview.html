@@ -11,7 +11,7 @@
             padding: 0;
             width: 100%;
             height: 100%;
-            background-color: #121212; /* Dark theme */
+            background-color: #121212;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
@@ -43,7 +43,13 @@
             text-align: center;
         }
 
-        h2 { margin-bottom: 20px; color: #f0f0f0; }
+        h2 { margin-bottom: 10px; color: #f0f0f0; }
+        
+        .subtext {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
 
         input[type="text"] {
             width: 100%;
@@ -62,8 +68,15 @@
             border-color: #bb86fc;
         }
 
-        button#start-btn {
+        .btn-container {
             margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button#start-btn {
             padding: 12px 30px;
             font-size: 16px;
             font-weight: bold;
@@ -74,8 +87,18 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-
         button#start-btn:hover { background-color: #9955e8; }
+
+        button#clear-btn {
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        button#clear-btn:hover { border-color: #888; color: #fff; }
 
         /* --- Grid Container Styles --- */
         .grid-container {
@@ -85,7 +108,7 @@
             width: 100vw;
             height: 100vh;
             opacity: 0;
-            pointer-events: none; /* Prevent clicking while hidden */
+            pointer-events: none;
             transition: opacity 1s ease;
         }
 
@@ -106,7 +129,6 @@
             border: none;
         }
 
-        /* Helper to hide elements completely */
         .hidden { display: none !important; }
 
         /* Mobile Responsiveness */
@@ -124,13 +146,18 @@
 
     <div id="setup-screen">
         <div class="input-group">
-            <h2>Enter YouTube URLs</h2>
-            <p style="font-size: 0.9em; color: #aaa; margin-bottom: 15px;">Paste full links (Live, Shorts, or Watch)</p>
-            <input type="text" id="url-1" placeholder="Stream 1 URL (e.g. youtube.com/watch?v=...)" autocomplete="off">
+            <h2>Multi-Stream Setup</h2>
+            <p class="subtext">Paste links below. They will be saved for next time.</p>
+            
+            <input type="text" id="url-1" placeholder="Stream 1 URL" autocomplete="off">
             <input type="text" id="url-2" placeholder="Stream 2 URL" autocomplete="off">
             <input type="text" id="url-3" placeholder="Stream 3 URL" autocomplete="off">
             <input type="text" id="url-4" placeholder="Stream 4 URL" autocomplete="off">
-            <button id="start-btn" onclick="startMultiview()">Start Multiview</button>
+            
+            <div class="btn-container">
+                <button id="clear-btn" onclick="clearStorage()">Clear Saved</button>
+                <button id="start-btn" onclick="startMultiview()">Start Watching</button>
+            </div>
         </div>
     </div>
 
@@ -142,65 +169,68 @@
     </div>
 
     <script>
-        /**
-         * Extracts the YouTube Video ID from various URL formats.
-         * Supports: 
-         * - youtube.com/watch?v=ID
-         * - youtube.com/live/ID
-         * - youtu.be/ID
-         * - youtube.com/embed/ID
-         */
+        // On Page Load: Check LocalStorage and fill inputs
+        document.addEventListener('DOMContentLoaded', () => {
+            for (let i = 1; i <= 4; i++) {
+                const savedUrl = localStorage.getItem('yt_stream_' + i);
+                if (savedUrl) {
+                    document.getElementById('url-' + i).value = savedUrl;
+                }
+            }
+        });
+
+        // Parse YouTube ID
         function getYouTubeID(url) {
             if (!url) return null;
-            // Regex to catch standard watch, live, embed, and short links
             const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
             const match = url.match(regExp);
             return match ? match[1] : null;
         }
 
+        // Start Logic
         function startMultiview() {
-            // Get inputs
-            const urls = [
-                document.getElementById('url-1').value,
-                document.getElementById('url-2').value,
-                document.getElementById('url-3').value,
-                document.getElementById('url-4').value
-            ];
-
             let hasValidLinks = false;
 
-            // Process each URL
-            urls.forEach((url, index) => {
-                const videoId = getYouTubeID(url);
-                const iframe = document.getElementById(`frame-${index + 1}`);
-                
+            for (let i = 1; i <= 4; i++) {
+                const inputVal = document.getElementById('url-' + i).value.trim();
+                const videoId = getYouTubeID(inputVal);
+                const iframe = document.getElementById('frame-' + i);
+
+                // SAVE to LocalStorage (even if empty, to overwrite old data)
+                localStorage.setItem('yt_stream_' + i, inputVal);
+
                 if (videoId) {
-                    // Mute is required for autoplay in most browsers
+                    // Update Iframe
                     iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
                     hasValidLinks = true;
                 } else {
-                    // Set a black placeholder if no valid URL is provided
-                    iframe.src = "about:blank"; 
+                    iframe.src = "about:blank";
                 }
-            });
+            }
 
             if (!hasValidLinks) {
                 alert("Please enter at least one valid YouTube URL.");
                 return;
             }
 
-            // Transition UI
+            // Hide Setup, Show Grid
             const setupScreen = document.getElementById('setup-screen');
             const gridView = document.getElementById('grid-view');
 
             setupScreen.style.opacity = '0';
-            
-            // Wait for fade out, then remove setup and show grid
             setTimeout(() => {
                 setupScreen.classList.add('hidden');
-                gridView.style.pointerEvents = 'auto'; // Enable interaction
+                gridView.style.pointerEvents = 'auto';
                 gridView.style.opacity = '1';
             }, 500);
+        }
+
+        // Clear Storage Logic
+        function clearStorage() {
+            for (let i = 1; i <= 4; i++) {
+                localStorage.removeItem('yt_stream_' + i);
+                document.getElementById('url-' + i).value = '';
+            }
         }
     </script>
 
