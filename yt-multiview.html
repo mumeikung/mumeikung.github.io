@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Stream Viewer</title>
+    <style>
+        /* --- Base Styles --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212; /* Dark theme */
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- Setup Screen Styles --- */
+        #setup-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #1e1e1e;
+            z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+
+        .input-group {
+            background: #2c2c2c;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 { margin-bottom: 20px; color: #f0f0f0; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            border: 1px solid #444;
+            border-radius: 6px;
+            background-color: #121212;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #bb86fc;
+        }
+
+        button#start-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            background-color: #bb86fc;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button#start-btn:hover { background-color: #9955e8; }
+
+        /* --- Grid Container Styles --- */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 50vh 50vh;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            pointer-events: none; /* Prevent clicking while hidden */
+            transition: opacity 1s ease;
+        }
+
+        .video-box {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border: 1px solid #000;
+            background: #000;
+        }
+
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Helper to hide elements completely */
+        .hidden { display: none !important; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body { overflow: auto; }
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 56.25vw);
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="setup-screen">
+        <div class="input-group">
+            <h2>Enter YouTube URLs</h2>
+            <p style="font-size: 0.9em; color: #aaa; margin-bottom: 15px;">Paste full links (Live, Shorts, or Watch)</p>
+            <input type="text" id="url-1" placeholder="Stream 1 URL (e.g. youtube.com/watch?v=...)" autocomplete="off">
+            <input type="text" id="url-2" placeholder="Stream 2 URL" autocomplete="off">
+            <input type="text" id="url-3" placeholder="Stream 3 URL" autocomplete="off">
+            <input type="text" id="url-4" placeholder="Stream 4 URL" autocomplete="off">
+            <button id="start-btn" onclick="startMultiview()">Start Multiview</button>
+        </div>
+    </div>
+
+    <div class="grid-container" id="grid-view">
+        <div class="video-box"><iframe id="frame-1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+        <div class="video-box"><iframe id="frame-2" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+        <div class="video-box"><iframe id="frame-3" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+        <div class="video-box"><iframe id="frame-4" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe></div>
+    </div>
+
+    <script>
+        /**
+         * Extracts the YouTube Video ID from various URL formats.
+         * Supports: 
+         * - youtube.com/watch?v=ID
+         * - youtube.com/live/ID
+         * - youtu.be/ID
+         * - youtube.com/embed/ID
+         */
+        function getYouTubeID(url) {
+            if (!url) return null;
+            // Regex to catch standard watch, live, embed, and short links
+            const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regExp);
+            return match ? match[1] : null;
+        }
+
+        function startMultiview() {
+            // Get inputs
+            const urls = [
+                document.getElementById('url-1').value,
+                document.getElementById('url-2').value,
+                document.getElementById('url-3').value,
+                document.getElementById('url-4').value
+            ];
+
+            let hasValidLinks = false;
+
+            // Process each URL
+            urls.forEach((url, index) => {
+                const videoId = getYouTubeID(url);
+                const iframe = document.getElementById(`frame-${index + 1}`);
+                
+                if (videoId) {
+                    // Mute is required for autoplay in most browsers
+                    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+                    hasValidLinks = true;
+                } else {
+                    // Set a black placeholder if no valid URL is provided
+                    iframe.src = "about:blank"; 
+                }
+            });
+
+            if (!hasValidLinks) {
+                alert("Please enter at least one valid YouTube URL.");
+                return;
+            }
+
+            // Transition UI
+            const setupScreen = document.getElementById('setup-screen');
+            const gridView = document.getElementById('grid-view');
+
+            setupScreen.style.opacity = '0';
+            
+            // Wait for fade out, then remove setup and show grid
+            setTimeout(() => {
+                setupScreen.classList.add('hidden');
+                gridView.style.pointerEvents = 'auto'; // Enable interaction
+                gridView.style.opacity = '1';
+            }, 500);
+        }
+    </script>
+
+</body>
+</html>
