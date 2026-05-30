@@ -382,37 +382,63 @@
 
     const charClasses = ['upper', 'lower', 'num', 'sym'];
 
-    // Build the active character set from the current selection.
-    const buildSet = () => {
-      // When URL-safe mode is on it provides its own complete "all chars" set
-      // and the individual class checkboxes are ignored.
-      if (els.urlsafe.checked) return SETS.urlsafe;
-      let set = '';
-      for (const c of charClasses) if (els[c].checked) set += SETS[c];
-      return set;
+    // Build the active selection: the combined pool plus the list of
+    // "required" sets that the result must each contain at least one of.
+    const buildSelection = () => {
+      // URL-safe mode provides its own complete "all chars" pool; it is a
+      // single set, so there is just one requirement.
+      if (els.urlsafe.checked) return { pool: SETS.urlsafe, required: [SETS.urlsafe] };
+      const required = [];
+      for (const c of charClasses) if (els[c].checked) required.push(SETS[c]);
+      return { pool: required.join(''), required };
     };
 
-    // Secure random string using the Web Crypto API.
-    // Rejection sampling avoids modulo bias for non-power-of-two set sizes.
-    const randString = (set, length) => {
-      if (!set || length <= 0) return '';
-      const max = 256 - (256 % set.length);
-      let out = '';
-      const buf = new Uint8Array(length * 2);
-      while (out.length < length) {
-        crypto.getRandomValues(buf);
-        for (let i = 0; i < buf.length && out.length < length; i++) {
-          if (buf[i] < max) out += set.charAt(buf[i] % set.length);
-        }
+    /* ---- Secure random helpers ---- */
+
+    // Unbiased random integer in [0, max) via rejection sampling on the
+    // Web Crypto CSPRNG. Discards values from the non-divisible tail so every
+    // outcome is equally likely (no modulo bias).
+    const randInt = (max) => {
+      if (max <= 0) return 0;
+      const limit = 256 - (256 % max);
+      const buf = new Uint8Array(1);
+      let x;
+      do { crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+      return x % max;
+    };
+
+    // Pick one uniformly random character from a set.
+    const randChar = (set) => set.charAt(randInt(set.length));
+
+    // In-place Fisher–Yates shuffle driven by the secure randInt, so the
+    // positions of the guaranteed characters are unpredictable.
+    const secureShuffle = (arr) => {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = randInt(i + 1);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
-      return out;
+      return arr;
+    };
+
+    // Generate a password that securely uses ALL required sets: it seeds one
+    // guaranteed character per required set, fills the remainder from the full
+    // pool, then shuffles so the guaranteed chars land in random positions.
+    const generatePassword = (pool, required, length) => {
+      if (!pool || length <= 0) return '';
+      const chars = [];
+      for (const set of required) {
+        if (chars.length >= length) break;
+        chars.push(randChar(set));
+      }
+      while (chars.length < length) chars.push(randChar(pool));
+      return secureShuffle(chars).join('');
     };
 
     // Estimate entropy and reflect it in the strength meter.
     const updateStrength = () => {
-      const set = buildSet();
+      const { pool } = buildSelection();
       const length = parseInt(els.len.value) || 0;
-      const bits = set.length ? Math.round(length * Math.log2(set.length)) : 0;
+      const bits = pool.length ? Math.round(length * Math.log2(pool.length)) : 0;
 
       let pct, color, label;
       if (bits === 0) { pct = 0; color = 'var(--bad)'; label = '—'; }
@@ -437,22 +463,46 @@
       updateStrength();
     };
 
-    const copy = async (text, btn) => {
+    /* ---- Copy helper ---- */
+
+    // Reusable copy-to-clipboard helper. Uses the async Clipboard API when
+    // available and falls back to a hidden textarea + execCommand for older
+    // browsers / non-secure contexts. Returns true on success.
+    const copyText = async (text) => {
       try {
-        await navigator.clipboard.writeText(text);
-        btn.textContent = 'Copied';
-        btn.classList.add('copied');
-        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1200);
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) { /* fall through to legacy path */ }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
       } catch (e) {
-        btn.textContent = 'Failed';
-        setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+        return false;
       }
+    };
+
+    // Wire a copy button to the helper, with visual feedback.
+    const copyToButton = async (text, btn) => {
+      const ok = await copyText(text);
+      btn.textContent = ok ? 'Copied' : 'Failed';
+      btn.classList.toggle('copied', ok);
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1200);
     };
 
     const generate = () => {
       els.hint.textContent = '';
-      const set = buildSet();
-      if (!set) {
+      const { pool, required } = buildSelection();
+      if (!pool) {
         els.output.innerHTML = '';
         els.hint.textContent = 'Please select at least one character set.';
         return;
@@ -461,9 +511,14 @@
       let amount = parseInt(els.amount.value) || 0;
       amount = Math.max(1, Math.min(100, amount));
 
+      // Warn when the length is too short to include every selected set.
+      if (length < required.length) {
+        els.hint.textContent = `Length ${length} is shorter than the ${required.length} selected sets — not all can be included.`;
+      }
+
       els.output.innerHTML = '';
       for (let i = 0; i < amount; i++) {
-        const value = randString(set, length);
+        const value = generatePassword(pool, required, length);
         const row = document.createElement('div');
         row.className = 'pw';
 
@@ -473,7 +528,7 @@
         const btn = document.createElement('button');
         btn.className = 'copy';
         btn.textContent = 'Copy';
-        btn.addEventListener('click', () => copy(value, btn));
+        btn.addEventListener('click', () => copyToButton(value, btn));
 
         row.appendChild(code);
         row.appendChild(btn);
