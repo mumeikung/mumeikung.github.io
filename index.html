@@ -3,28 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MUMEIKUNG TOOLS &middot; Password Generator</title>
+  <title>MUMEIKUNG TOOLS &middot; Secret Generator</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro:400,600,700">
   <style>
     :root {
-      --bg: #0f1117;
-      --card: #1a1d27;
-      --card-2: #232733;
-      --line: #2c313f;
-      --text: #e6e9ef;
-      --muted: #9aa3b2;
-      --accent: #5b8cff;
-      --accent-2: #3a6bff;
-      --good: #3ddc84;
-      --warn: #ffb020;
-      --bad: #ff5c5c;
+      --bg: #f4f6fb;
+      --bg-2: #e9edf6;
+      --card: #ffffff;
+      --card-2: #f3f5fa;
+      --line: #d9dfeb;
+      --text: #1c2230;
+      --muted: #66708a;
+      --accent: #3a6bff;
+      --accent-2: #2f54e0;
+      --good: #1ba35a;
+      --warn: #c77700;
+      --bad: #d83a3a;
     }
 
     * { box-sizing: border-box; }
 
     body {
       font-family: "Source Code Pro", monospace;
-      background: radial-gradient(1200px 600px at 50% -10%, #1c2030 0%, var(--bg) 60%);
+      background: radial-gradient(1200px 600px at 50% -10%, var(--bg-2) 0%, var(--bg) 60%);
       color: var(--text);
       margin: 0;
       min-height: 100vh;
@@ -41,7 +42,7 @@
 
     header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     header h1 {
@@ -56,13 +57,44 @@
       font-size: 0.85rem;
     }
 
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      background: var(--card-2);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+    }
+    .tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .tab.active {
+      background: var(--card);
+      color: var(--accent);
+      box-shadow: 0 2px 6px rgba(31,45,80,0.08);
+    }
+
     .card {
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 16px;
       padding: 22px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+      box-shadow: 0 14px 40px rgba(31,45,80,0.10);
     }
+    .panel { display: none; }
+    .panel.active { display: block; }
 
     .section-title {
       font-size: 0.72rem;
@@ -93,7 +125,7 @@
       user-select: none;
     }
 
-    .opt:hover { border-color: #3a4256; }
+    .opt:hover { border-color: var(--accent); }
 
     .opt input { display: none; }
 
@@ -119,12 +151,10 @@
       top: 1px;
       width: 5px;
       height: 9px;
-      border: solid #0f1117;
+      border: solid #ffffff;
       border-width: 0 2px 2px 0;
       transform: rotate(45deg);
     }
-
-    .opt input:checked ~ .opt-text .opt-name { color: var(--text); }
 
     .opt input:disabled ~ .box { opacity: .4; }
     .opt.disabled { opacity: .5; cursor: not-allowed; }
@@ -167,7 +197,7 @@
       accent-color: var(--accent);
     }
 
-    input[type="number"] {
+    input[type="number"], select {
       width: 100%;
       background: var(--card-2);
       border: 1px solid var(--line);
@@ -177,7 +207,7 @@
       font-size: 0.95rem;
       padding: 9px 11px;
     }
-    input[type="number"]:focus { outline: none; border-color: var(--accent); }
+    input[type="number"]:focus, select:focus { outline: none; border-color: var(--accent); }
 
     /* Strength bar */
     .strength { margin-bottom: 18px; }
@@ -211,13 +241,13 @@
       font-weight: 700;
       font-size: 0.95rem;
       letter-spacing: 0.5px;
-      color: #0f1117;
+      color: #ffffff;
       background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
       cursor: pointer;
       transition: transform .08s, box-shadow .15s;
-      box-shadow: 0 8px 20px rgba(58,107,255,0.3);
+      box-shadow: 0 8px 20px rgba(58,107,255,0.25);
     }
-    .generate:hover { box-shadow: 0 10px 26px rgba(58,107,255,0.45); }
+    .generate:hover { box-shadow: 0 10px 26px rgba(58,107,255,0.38); }
     .generate:active { transform: translateY(1px); }
 
     /* Output */
@@ -256,7 +286,7 @@
       cursor: pointer;
       transition: color .15s, border-color .15s, background .15s;
     }
-    .copy:hover { color: var(--text); border-color: var(--accent); }
+    .copy:hover { color: var(--accent); border-color: var(--accent); }
     .copy.copied { color: var(--good); border-color: var(--good); }
 
     .hint {
@@ -267,6 +297,13 @@
     }
     .hint:empty { display: none; }
 
+    .note {
+      color: var(--muted);
+      font-size: 0.74rem;
+      margin: -6px 0 18px;
+      line-height: 1.4;
+    }
+
     @media (max-width: 480px) {
       .options { grid-template-columns: 1fr; }
     }
@@ -275,81 +312,125 @@
 <body>
   <div class="app">
     <header>
-      <h1>🔐 Password Generator</h1>
-      <p>Cryptographically secure random strings, generated in your browser.</p>
+      <h1>🔐 Secret Generator</h1>
+      <p>Cryptographically secure random secrets, generated in your browser.</p>
     </header>
 
+    <div class="tabs">
+      <button class="tab active" data-tab="password">Password</button>
+      <button class="tab" data-tab="base64">Base64 Secret</button>
+    </div>
+
     <div class="card">
-      <p class="section-title">Character sets</p>
-      <div class="options">
-        <label class="opt">
-          <input type="checkbox" id="cb_upper" checked>
-          <span class="box"></span>
-          <span class="opt-text">
-            <span class="opt-name">Uppercase</span>
-            <span class="opt-sample">A–Z</span>
-          </span>
-        </label>
+      <!-- ====== PASSWORD PANEL ====== -->
+      <div class="panel active" id="panel-password">
+        <p class="section-title">Character sets</p>
+        <div class="options">
+          <label class="opt">
+            <input type="checkbox" id="cb_upper" checked>
+            <span class="box"></span>
+            <span class="opt-text">
+              <span class="opt-name">Uppercase</span>
+              <span class="opt-sample">A–Z</span>
+            </span>
+          </label>
 
-        <label class="opt">
-          <input type="checkbox" id="cb_lower" checked>
-          <span class="box"></span>
-          <span class="opt-text">
-            <span class="opt-name">Lowercase</span>
-            <span class="opt-sample">a–z</span>
-          </span>
-        </label>
+          <label class="opt">
+            <input type="checkbox" id="cb_lower" checked>
+            <span class="box"></span>
+            <span class="opt-text">
+              <span class="opt-name">Lowercase</span>
+              <span class="opt-sample">a–z</span>
+            </span>
+          </label>
 
-        <label class="opt">
-          <input type="checkbox" id="cb_num" checked>
-          <span class="box"></span>
-          <span class="opt-text">
-            <span class="opt-name">Numbers</span>
-            <span class="opt-sample">0–9</span>
-          </span>
-        </label>
+          <label class="opt">
+            <input type="checkbox" id="cb_num" checked>
+            <span class="box"></span>
+            <span class="opt-text">
+              <span class="opt-name">Numbers</span>
+              <span class="opt-sample">0–9</span>
+            </span>
+          </label>
 
-        <label class="opt">
-          <input type="checkbox" id="cb_sym" checked>
-          <span class="box"></span>
-          <span class="opt-text">
-            <span class="opt-name">Symbols</span>
-            <span class="opt-sample">-._@!#%&*=+?</span>
-          </span>
-        </label>
+          <label class="opt">
+            <input type="checkbox" id="cb_sym" checked>
+            <span class="box"></span>
+            <span class="opt-text">
+              <span class="opt-name">Symbols</span>
+              <span class="opt-sample">-._@!#%&*=+?</span>
+            </span>
+          </label>
 
-        <label class="opt url-safe">
-          <input type="checkbox" id="cb_urlsafe">
-          <span class="box"></span>
-          <span class="opt-text">
-            <span class="opt-name">URL-safe (all chars)</span>
-            <span class="opt-sample">A–Z a–z 0–9 - . _ ~ &mdash; RFC&nbsp;3986 unreserved, safe in any URL</span>
-          </span>
-        </label>
+          <label class="opt url-safe">
+            <input type="checkbox" id="cb_urlsafe">
+            <span class="box"></span>
+            <span class="opt-text">
+              <span class="opt-name">URL-safe (all chars)</span>
+              <span class="opt-sample">A–Z a–z 0–9 - . _ ~ &mdash; RFC&nbsp;3986 unreserved, safe in any URL</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="controls">
+          <div class="field">
+            <label for="len">Length <span class="val" id="lenVal">32</span></label>
+            <input type="range" id="len" min="4" max="128" value="32">
+          </div>
+          <div class="field">
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" value="5" min="1" max="100">
+          </div>
+        </div>
+
+        <div class="strength">
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-label">
+            <span>Strength</span>
+            <span id="strengthText">—</span>
+          </div>
+        </div>
+
+        <button class="generate" id="genBtn">Generate</button>
+        <div class="hint" id="hint"></div>
+        <div class="output" id="output"></div>
       </div>
 
-      <div class="controls">
-        <div class="field">
-          <label for="len">Length <span class="val" id="lenVal">32</span></label>
-          <input type="range" id="len" min="4" max="128" value="32">
-        </div>
-        <div class="field">
-          <label for="amount">Amount</label>
-          <input type="number" id="amount" value="5" min="1" max="100">
-        </div>
-      </div>
+      <!-- ====== BASE64 PANEL ====== -->
+      <div class="panel" id="panel-base64">
+        <p class="section-title">Base64 secret</p>
 
-      <div class="strength">
-        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-        <div class="strength-label">
-          <span>Strength</span>
-          <span id="strengthText">—</span>
+        <div class="controls">
+          <div class="field">
+            <label for="bits">Bits <span class="val" id="bitsVal">256</span></label>
+            <input type="range" id="bits" min="8" max="4096" step="8" value="256">
+          </div>
+          <div class="field">
+            <label for="b64amount">Amount</label>
+            <input type="number" id="b64amount" value="5" min="1" max="100">
+          </div>
         </div>
-      </div>
 
-      <button class="generate" id="genBtn">Generate</button>
-      <div class="hint" id="hint"></div>
-      <div class="output" id="output"></div>
+        <div class="controls">
+          <div class="field">
+            <label for="b64bitsNum">Exact bits</label>
+            <input type="number" id="b64bitsNum" value="256" min="8" step="8">
+          </div>
+          <div class="field">
+            <label for="b64encoding">Encoding</label>
+            <select id="b64encoding">
+              <option value="standard">Standard (+ / =)</option>
+              <option value="url">URL-safe (- _ no pad)</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="note" id="b64note"></p>
+
+        <button class="generate" id="b64genBtn">Generate</button>
+        <div class="hint" id="b64hint"></div>
+        <div class="output" id="b64output"></div>
+      </div>
     </div>
   </div>
 
@@ -377,21 +458,20 @@
       output: $('output'),
       hint: $('hint'),
       strengthFill: $('strengthFill'),
-      strengthText: $('strengthText')
+      strengthText: $('strengthText'),
+      // base64
+      bits: $('bits'),
+      bitsVal: $('bitsVal'),
+      b64bitsNum: $('b64bitsNum'),
+      b64amount: $('b64amount'),
+      b64encoding: $('b64encoding'),
+      b64note: $('b64note'),
+      b64genBtn: $('b64genBtn'),
+      b64output: $('b64output'),
+      b64hint: $('b64hint')
     };
 
     const charClasses = ['upper', 'lower', 'num', 'sym'];
-
-    // Build the active selection: the combined pool plus the list of
-    // "required" sets that the result must each contain at least one of.
-    const buildSelection = () => {
-      // URL-safe mode provides its own complete "all chars" pool; it is a
-      // single set, so there is just one requirement.
-      if (els.urlsafe.checked) return { pool: SETS.urlsafe, required: [SETS.urlsafe] };
-      const required = [];
-      for (const c of charClasses) if (els[c].checked) required.push(SETS[c]);
-      return { pool: required.join(''), required };
-    };
 
     /* ---- Secure random helpers ---- */
 
@@ -420,6 +500,24 @@
       return arr;
     };
 
+    // Fill a buffer with `byteLen` cryptographically secure random bytes.
+    const randBytes = (byteLen) => {
+      const buf = new Uint8Array(byteLen);
+      crypto.getRandomValues(buf);
+      return buf;
+    };
+
+    /* ---- Password generation ---- */
+
+    // Build the active selection: the combined pool plus the list of
+    // "required" sets that the result must each contain at least one of.
+    const buildSelection = () => {
+      if (els.urlsafe.checked) return { pool: SETS.urlsafe, required: [SETS.urlsafe] };
+      const required = [];
+      for (const c of charClasses) if (els[c].checked) required.push(SETS[c]);
+      return { pool: required.join(''), required };
+    };
+
     // Generate a password that securely uses ALL required sets: it seeds one
     // guaranteed character per required set, fills the remainder from the full
     // pool, then shuffles so the guaranteed chars land in random positions.
@@ -434,7 +532,26 @@
       return secureShuffle(chars).join('');
     };
 
-    // Estimate entropy and reflect it in the strength meter.
+    /* ---- Base64 generation ---- */
+
+    // Encode a byte array as base64. `url` selects the URL-safe alphabet
+    // (- and _ instead of + and /) and drops the '=' padding.
+    const toBase64 = (bytes, url) => {
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      let b64 = btoa(bin);
+      if (url) b64 = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return b64;
+    };
+
+    // Generate a base64-encoded secret carrying `bits` bits of entropy.
+    const generateBase64 = (bits, url) => {
+      const byteLen = Math.ceil(bits / 8);
+      return toBase64(randBytes(byteLen), url);
+    };
+
+    /* ---- Strength meter (password) ---- */
+
     const updateStrength = () => {
       const { pool } = buildSelection();
       const length = parseInt(els.len.value) || 0;
@@ -499,26 +616,10 @@
       setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1200);
     };
 
-    const generate = () => {
-      els.hint.textContent = '';
-      const { pool, required } = buildSelection();
-      if (!pool) {
-        els.output.innerHTML = '';
-        els.hint.textContent = 'Please select at least one character set.';
-        return;
-      }
-      const length = parseInt(els.len.value) || 0;
-      let amount = parseInt(els.amount.value) || 0;
-      amount = Math.max(1, Math.min(100, amount));
-
-      // Warn when the length is too short to include every selected set.
-      if (length < required.length) {
-        els.hint.textContent = `Length ${length} is shorter than the ${required.length} selected sets — not all can be included.`;
-      }
-
-      els.output.innerHTML = '';
-      for (let i = 0; i < amount; i++) {
-        const value = generatePassword(pool, required, length);
+    // Render a list of secret strings into an output container.
+    const renderOutput = (container, values) => {
+      container.innerHTML = '';
+      for (const value of values) {
         const row = document.createElement('div');
         row.className = 'pw';
 
@@ -532,19 +633,110 @@
 
         row.appendChild(code);
         row.appendChild(btn);
-        els.output.appendChild(row);
+        container.appendChild(row);
       }
     };
 
-    // Wire up events.
+    /* ---- Handlers ---- */
+
+    const generate = () => {
+      els.hint.textContent = '';
+      const { pool, required } = buildSelection();
+      if (!pool) {
+        els.output.innerHTML = '';
+        els.hint.textContent = 'Please select at least one character set.';
+        return;
+      }
+      const length = parseInt(els.len.value) || 0;
+      let amount = parseInt(els.amount.value) || 0;
+      amount = Math.max(1, Math.min(100, amount));
+
+      if (length < required.length) {
+        els.hint.textContent = `Length ${length} is shorter than the ${required.length} selected sets — not all can be included.`;
+      }
+
+      const values = [];
+      for (let i = 0; i < amount; i++) values.push(generatePassword(pool, required, length));
+      renderOutput(els.output, values);
+    };
+
+    // Keep the bits slider and the exact-bits number input in sync, rounding
+    // to the nearest byte (multiple of 8) since base64 encodes whole bytes.
+    const clampBits = (n) => {
+      n = Math.round((parseInt(n) || 0) / 8) * 8;
+      return Math.max(8, Math.min(8192, n));
+    };
+
+    const updateB64Note = () => {
+      const bits = clampBits(els.b64bitsNum.value);
+      const bytes = bits / 8;
+      const url = els.b64encoding.value === 'url';
+      const chars = url ? Math.ceil((bytes * 4) / 3) : Math.ceil(bytes / 3) * 4;
+      els.b64note.textContent = `${bits} bits = ${bytes} random bytes → ~${chars} base64 characters.`;
+    };
+
+    const syncBitsFromSlider = () => {
+      els.bitsVal.textContent = els.bits.value;
+      els.b64bitsNum.value = els.bits.value;
+      updateB64Note();
+    };
+
+    const syncBitsFromNumber = () => {
+      const bits = clampBits(els.b64bitsNum.value);
+      els.b64bitsNum.value = bits;
+      // The slider has a capped range; reflect the value when it fits.
+      if (bits >= parseInt(els.bits.min) && bits <= parseInt(els.bits.max)) {
+        els.bits.value = bits;
+        els.bitsVal.textContent = bits;
+      } else {
+        els.bitsVal.textContent = bits;
+      }
+      updateB64Note();
+    };
+
+    const generateB64 = () => {
+      els.b64hint.textContent = '';
+      const bits = clampBits(els.b64bitsNum.value);
+      els.b64bitsNum.value = bits;
+      let amount = parseInt(els.b64amount.value) || 0;
+      amount = Math.max(1, Math.min(100, amount));
+      const url = els.b64encoding.value === 'url';
+
+      const values = [];
+      for (let i = 0; i < amount; i++) values.push(generateBase64(bits, url));
+      renderOutput(els.b64output, values);
+    };
+
+    /* ---- Tabs ---- */
+
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+        $('panel-' + tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    /* ---- Wire up events ---- */
+
     els.len.addEventListener('input', () => { els.lenVal.textContent = els.len.value; updateStrength(); });
     els.urlsafe.addEventListener('change', syncUrlSafeMode);
     charClasses.forEach((c) => els[c].addEventListener('change', updateStrength));
     els.genBtn.addEventListener('click', generate);
 
-    // Initial state.
+    els.bits.addEventListener('input', syncBitsFromSlider);
+    els.b64bitsNum.addEventListener('input', syncBitsFromNumber);
+    els.b64encoding.addEventListener('change', updateB64Note);
+    els.b64genBtn.addEventListener('click', generateB64);
+
+    /* ---- Initial state ---- */
+
     updateStrength();
     generate();
+    updateB64Note();
+    generateB64();
   </script>
 </body>
 </html>
